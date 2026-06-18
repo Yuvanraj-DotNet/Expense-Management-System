@@ -13,5 +13,6 @@ namespace Expense_Management_System.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
     }
 }
