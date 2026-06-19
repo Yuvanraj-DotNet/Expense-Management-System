@@ -16,5 +16,21 @@ namespace Expense_Management_System.Data
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<ExpenseApproval> ExpenseApprovals { get; set; }
         public DbSet<Reimbursement> Reimbursements { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Expense>()
+                .Property(e => e.Amount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<ExpenseCategory>()
+                .Property(e => e.MaxAllowedAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Reimbursement>()
+                .Property(r => r.Amount)
+                .HasPrecision(18, 2);
+        }
     }
 }
