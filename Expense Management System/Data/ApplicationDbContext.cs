@@ -15,5 +15,6 @@ namespace Expense_Management_System.Data
         public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<ExpenseApproval> ExpenseApprovals { get; set; }
+        public DbSet<Reimbursement> Reimbursements { get; set; }
     }
 }
