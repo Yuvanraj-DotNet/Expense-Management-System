@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Expense_Management_System.Data;
 using Expense_Management_System.Services.Auth;
+using Expense_Management_System.Services.User;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddControllers();
 
