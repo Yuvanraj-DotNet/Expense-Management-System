@@ -23,6 +23,11 @@ namespace Expense_Management_System.Services.Auth
                 return "Invalid Email";
             }
 
+            if (user.PasswordHash != loginDto.Password)
+            {
+                return "Invalid Password";
+            }
+
             return "Login Successful";
         }
     }
