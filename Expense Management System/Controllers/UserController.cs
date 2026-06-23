@@ -20,6 +20,11 @@ namespace Expense_Management_System.Controllers
         [HttpPost]
         public IActionResult CreateUser(CreateUserDto createUserDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var result = _userService.CreateUser(createUserDto);
 
             return Ok(result);
