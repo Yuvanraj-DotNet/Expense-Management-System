@@ -15,8 +15,10 @@ namespace Expense_Management_System.DTOs.User
         [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
         public string Password { get; set; } = string.Empty;
 
+        [Range(1, 4, ErrorMessage = "Invalid Role")]
         public int RoleId { get; set; }
 
+        [Range(1, int.MaxValue, ErrorMessage = "Invalid Department")]
         public int DepartmentId { get; set; }
 
         public int? ManagerId { get; set; }
