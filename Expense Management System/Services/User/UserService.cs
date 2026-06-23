@@ -15,6 +15,14 @@ namespace Expense_Management_System.Services.User
 
         public string CreateUser(CreateUserDto createUserDto)
         {
+            var existingUser = _context.Users
+                .FirstOrDefault(u => u.Email == createUserDto.Email);
+
+            if (existingUser != null)
+            {
+                return "Email already exists";
+            }
+
             var user = new Models.User
             {
                 Name = createUserDto.Name,
