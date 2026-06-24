@@ -1,0 +1,10 @@
+﻿using Expense_Management_System.DTOs.Expense;
+
+namespace Expense_Management_System.Services.Expense
+{
+    public interface IExpenseService
+    {
+        string CreateExpense(CreateExpenseDto createExpenseDto);
+        string UpdateExpense(int id, UpdateExpenseDto updateExpenseDto);
+    }
+}
