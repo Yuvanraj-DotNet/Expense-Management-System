@@ -6,5 +6,7 @@ namespace Expense_Management_System.Services.Expense
     {
         string CreateExpense(CreateExpenseDto createExpenseDto);
         string UpdateExpense(int id, UpdateExpenseDto updateExpenseDto);
+        List<ExpenseResponseDto> GetMyExpenses(int userId);
+
     }
 }

@@ -34,6 +34,27 @@ namespace Expense_Management_System.Controllers
 
         }
 
+
+        [HttpGet("my")]
+        public IActionResult GetMyExpenses(int userId)
+        {
+            var expenses = _expenseService.GetMyExpenses(userId);
+
+
+            if (expenses.Count == 0)
+            {
+                return NotFound("No expenses found for this user");
+            }
+
+            return Ok(expenses);
+
+
+        }
+
+
+
+
+
     }
 
 }

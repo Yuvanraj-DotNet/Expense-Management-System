@@ -52,6 +52,23 @@ namespace Expense_Management_System.Services.Expense
 
             return "Expense Updated Successfully";
 
+        }
+
+        public List<ExpenseResponseDto> GetMyExpenses(int userId)
+        {
+            var expenses = _context.Expenses
+            .Where(e => e.UserId == userId)
+            .Select(e => new ExpenseResponseDto
+            {
+                Id = e.Id,
+                Title = e.Title,
+                Amount = e.Amount,
+                Status = e.Status,
+                ExpenseDate = e.ExpenseDate
+            })
+            .ToList();
+
+             return expenses;
 
         }
 
