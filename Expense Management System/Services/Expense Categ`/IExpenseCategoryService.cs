@@ -5,5 +5,6 @@ namespace Expense_Management_System.Services.ExpenseCategory
     public interface IExpenseCategoryService
     {
         string CreateCategory(CreateExpenseCategoryDto createExpenseCategoryDto);
+        List<Models.ExpenseCategory> GetAllCategories();
     }
 }

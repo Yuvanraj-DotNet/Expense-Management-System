@@ -38,6 +38,11 @@ namespace Expense_Management_System.Services.ExpenseCategory
 
         }
 
+        public List<Models.ExpenseCategory> GetAllCategories()
+        {
+            return _context.ExpenseCategories.ToList();
+        }
+
 
     }
 

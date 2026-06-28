@@ -23,6 +23,20 @@ namespace Expense_Management_System.Controllers
 
             return Ok(result);
         }
+
+
+        [HttpGet]
+        public IActionResult GetAllCategories()
+        {
+            var result = _expenseCategoryService.GetAllCategories();
+
+            if (result.Count == 0)
+            {
+                return NotFound("No Expense Categories Found");
+            }
+
+            return Ok(result);
+        }
     }
 
 
