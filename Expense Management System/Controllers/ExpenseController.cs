@@ -51,6 +51,31 @@ namespace Expense_Management_System.Controllers
 
         }
 
+        [HttpPost("{id}/submit")]
+        public IActionResult SubmitExpense(int id)
+        {
+            var result = _expenseService.SubmitExpense(id);
+
+            return Ok(result);
+
+        }
+
+        [HttpGet("pending-approval")]
+        public IActionResult GetPendingApprovals()
+        {
+            var expenses = _expenseService.GetPendingApprovals();
+
+            if (expenses.Count == 0)
+            {
+                return NotFound("No Pending Expenses Found");
+            }
+
+            return Ok(expenses);
+
+        }
+
+
+
 
 
 

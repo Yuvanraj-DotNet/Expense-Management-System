@@ -8,5 +8,9 @@ namespace Expense_Management_System.Services.Expense
         string UpdateExpense(int id, UpdateExpenseDto updateExpenseDto);
         List<ExpenseResponseDto> GetMyExpenses(int userId);
 
+        string SubmitExpense(int id);
+
+        List<ExpenseResponseDto> GetPendingApprovals();
+
     }
 }
