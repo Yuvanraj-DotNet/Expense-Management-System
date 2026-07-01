@@ -74,6 +74,14 @@ namespace Expense_Management_System.Controllers
 
         }
 
+        [HttpPost("{id}/approve")]
+        public IActionResult ApproveExpense(int id, ApproveExpenseDto approveExpenseDto)
+        {
+            var result = _expenseService.ApproveExpense(id, approveExpenseDto);
+
+            return Ok(result);
+        }
+
 
 
 

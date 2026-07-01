@@ -122,5 +122,30 @@ namespace Expense_Management_System.Services.Expense
 
             return expenses;
         }
+
+        public string ApproveExpense(int id, ApproveExpenseDto approveExpenseDto)
+        {
+            var expense = _context.Expenses
+                .FirstOrDefault(e => e.Id == id);
+
+            if (expense == null)
+            {
+                return "Expense Not Found";
+            }
+
+            if (expense.Status != "Submitted")
+            {
+                return "Only Submitted Expenses Can Be Approved";
+            }
+
+            expense.Status = "Approved";
+
+            _context.SaveChanges();
+
+            return "Expense Approved Successfully";
+        }
+
+
+
     }
 }
