@@ -10,6 +10,9 @@ namespace Expense_Management_System.Services.Expense
         string SubmitExpense(int id);
         List<ExpenseResponseDto> GetPendingApprovals();
         string ApproveExpense(int id, ApproveExpenseDto approveExpenseDto);
+        string RejectExpense(int id, RejectExpenseDto rejectExpenseDto);
+        List<ApprovedExpenseDto> GetApprovedExpenses();
+        string ReimburseExpense(int id, ReimburseExpenseDto reimburseExpenseDto);
 
     }
 }

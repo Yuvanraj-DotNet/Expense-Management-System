@@ -82,8 +82,34 @@ namespace Expense_Management_System.Controllers
             return Ok(result);
         }
 
+        [HttpPost("{id}/reject")]
+        public IActionResult RejectExpense(int id, RejectExpenseDto rejectExpenseDto)
+        {
+            var result = _expenseService.RejectExpense(id, rejectExpenseDto);
 
+            return Ok(result);
+        }
 
+        [HttpGet("approved")]
+        public IActionResult GetApprovedExpenses()
+        {
+            var result = _expenseService.GetApprovedExpenses();
+
+            if (result.Count == 0)
+            {
+                return NotFound("No Approved Expenses Found");
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/reimburse")]
+        public IActionResult ReimburseExpense(int id, ReimburseExpenseDto reimburseExpenseDto)
+        {
+            var result = _expenseService.ReimburseExpense(id, reimburseExpenseDto);
+
+            return Ok(result);
+        }
 
 
 

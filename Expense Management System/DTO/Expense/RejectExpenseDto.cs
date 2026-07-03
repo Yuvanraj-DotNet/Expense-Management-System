@@ -1,9 +1,9 @@
 ﻿namespace Expense_Management_System.DTOs.Expense
 {
-    public class ApproveExpenseDto
+    public class RejectExpenseDto
     {
         public int ManagerId { get; set; }
 
-        public string Comment { get; set; } = "Approved by Manager";
+        public string Comment { get; set; } = string.Empty;
     }
 }
