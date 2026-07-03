@@ -1,8 +1,10 @@
 using Expense_Management_System.Data;
+using Expense_Management_System.Services;
 using Expense_Management_System.Services.Auth;
+using Expense_Management_System.Services.Department;
 using Expense_Management_System.Services.Expense;
-using Expense_Management_System.Services.User;
 using Expense_Management_System.Services.ExpenseCategory;
+using Expense_Management_System.Services.User;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +13,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IExpenseCategoryService, ExpenseCategoryService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 
 
 builder.Services.AddControllers();
