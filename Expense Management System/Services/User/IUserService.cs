@@ -5,5 +5,6 @@ namespace Expense_Management_System.Services.User
     public interface IUserService
     {
         string CreateUser(CreateUserDto createUserDto);
+        List<UserResponseDto> GetAllUsers();
     }
 }

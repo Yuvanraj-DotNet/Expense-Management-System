@@ -29,5 +29,13 @@ namespace Expense_Management_System.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet]
+        public IActionResult GetAllUsers()
+        {
+            var result = _userService.GetAllUsers();
+
+            return Ok(result);
+        }
     }
 }
