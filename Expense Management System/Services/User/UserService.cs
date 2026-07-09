@@ -116,5 +116,32 @@ namespace Expense_Management_System.Services.User
 
             return user;
         }
+
+        public List<UserResponseDto> SearchUsers(string keyword)
+        {
+            keyword = keyword.Trim().ToLower();
+
+            var users = _context.Users
+                .Where(u =>
+                    u.Name.ToLower().Contains(keyword) ||
+                    u.Email.ToLower().Contains(keyword) ||
+                    u.Id.ToString().Contains(keyword) ||
+                    u.RoleId.ToString().Contains(keyword) ||
+                    u.DepartmentId.ToString().Contains(keyword) ||
+                    (u.ManagerId != null && u.ManagerId.ToString().Contains(keyword))
+                )
+                .Select(u => new UserResponseDto
+                {
+                    Id = u.Id,
+                    Name = u.Name,
+                    Email = u.Email,
+                    RoleId = u.RoleId,
+                    DepartmentId = u.DepartmentId,
+                    ManagerId = u.ManagerId
+                })
+                .ToList();
+
+            return users;
+        }
     }
 }

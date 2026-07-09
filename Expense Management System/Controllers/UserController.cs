@@ -50,5 +50,18 @@ namespace Expense_Management_System.Controllers
 
             return Ok(user);
         }
+
+        [HttpGet("search")]
+        public IActionResult SearchUsers(string keyword)
+        {
+            var users = _userService.SearchUsers(keyword);
+
+            if (!users.Any())
+            {
+                return NotFound("No Users Found");
+            }
+
+            return Ok(users);
+        }
     }
 }
