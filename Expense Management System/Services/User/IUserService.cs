@@ -17,5 +17,7 @@ namespace Expense_Management_System.Services.User
 
         string UpdateUser(int id, UpdateUserDto updateUserDto);
 
+        string DeleteUser(int id);
+
     }
 }

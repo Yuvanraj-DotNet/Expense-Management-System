@@ -32,11 +32,12 @@ namespace Expense_Management_System.Controllers
 
         [HttpGet]
         public IActionResult GetAllUsers
-(
-    string? search = "",
-    int pageNumber = 1,
-    int pageSize = 10
-)
+            (
+               string? search = "",
+               int pageNumber = 1,
+               int pageSize = 10
+            )
+
         {
             int totalRecords;
 
@@ -85,6 +86,20 @@ namespace Expense_Management_System.Controllers
 
             return BadRequest(result);
         }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteUser(int id)
+        {
+            var result = _userService.DeleteUser(id);
+
+            if (result == "User Deleted Successfully")
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
 
 
     }

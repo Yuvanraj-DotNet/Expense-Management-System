@@ -218,6 +218,21 @@ namespace Expense_Management_System.Services.User
             return "User Updated Successfully";
         }
 
+        public string DeleteUser(int id)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
+
+            if (user == null)
+            {
+                return "User Not Found";
+            }
+
+            _context.Users.Remove(user);
+            _context.SaveChanges();
+
+            return "User Deleted Successfully";
+        }
+
 
     }
 }

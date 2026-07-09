@@ -24,11 +24,35 @@ namespace Expense_Management_System.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAllDepartments()
-        {
-            var result = _departmentService.GetAllDepartments();
+        public IActionResult GetAllDepartments
 
-            return Ok(result);
+             (
+               string? search = "",
+               int pageNumber = 1,
+               int pageSize = 10
+             )
+
+        {
+            int totalRecords;
+
+            var departments = _departmentService.GetAllDepartments
+            (
+                search,
+                pageNumber,
+                pageSize,
+                out totalRecords
+            );
+
+            int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
+            return Ok(new
+            {
+                TotalRecords = totalRecords,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages,
+                Data = departments
+            });
         }
 
         [HttpGet("{id}")]

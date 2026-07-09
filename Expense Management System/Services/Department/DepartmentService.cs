@@ -1,6 +1,7 @@
 ﻿using Expense_Management_System.Data;
 using Expense_Management_System.DTOs.Department;
 using Expense_Management_System.Services.Department;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Expense_Management_System.Services.Department
 {
@@ -37,9 +38,46 @@ namespace Expense_Management_System.Services.Department
             return "Department Created Successfully";
         }
 
-        public List<Expense_Management_System.Models.Department> GetAllDepartments()
+        public List<DepartmentResponseDto> GetAllDepartments
+
+             (
+               string? search,
+               int pageNumber,
+               int pageSize,
+               out int totalRecords
+             )
+
         {
-            return _context.Departments.ToList();
+            var query = _context.Departments.AsQueryable();
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+
+                query = query.Where(d =>
+                    d.Id.ToString().Contains(search) ||
+                    d.Name.ToLower().Contains(search) ||
+                    d.Code.ToLower().Contains(search) ||
+                    (d.HeadUserId != null && d.HeadUserId.ToString().Contains(search))
+                );
+            }
+
+            totalRecords = query.Count();
+
+            var departments = query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(d => new DepartmentResponseDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    Code = d.Code,
+                    HeadUserId = d.HeadUserId
+                })
+                .ToList();
+
+            return departments;
         }
 
         public Expense_Management_System.Models.Department? GetDepartmentById(int id)
