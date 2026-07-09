@@ -82,9 +82,40 @@ namespace Expense_Management_System.Services.User
             return "User Created Successfully";
         }
 
-        public List<UserResponseDto> GetAllUsers()
+        public List<UserResponseDto> GetAllUsers
+
+           (
+             string? search,
+             int pageNumber,
+             int pageSize,
+             out int totalRecords
+           )
+
         {
-            var users = _context.Users
+            var query = _context.Users.AsQueryable();
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+
+                query = query.Where(u =>
+                    u.Name.ToLower().Contains(search) ||
+                    u.Email.ToLower().Contains(search) ||
+                    u.Id.ToString().Contains(search) ||
+                    u.RoleId.ToString().Contains(search) ||
+                    u.DepartmentId.ToString().Contains(search) ||
+                    (u.ManagerId != null && u.ManagerId.ToString().Contains(search))
+                );
+            }
+
+            // Total Records
+            totalRecords = query.Count();
+
+            // Pagination
+            var users = query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .Select(u => new UserResponseDto
                 {
                     Id = u.Id,
@@ -98,7 +129,6 @@ namespace Expense_Management_System.Services.User
 
             return users;
         }
-
         public UserResponseDto? GetUserById(int id)
         {
             var user = _context.Users
@@ -117,31 +147,77 @@ namespace Expense_Management_System.Services.User
             return user;
         }
 
-        public List<UserResponseDto> SearchUsers(string keyword)
+        public string UpdateUser(int id, UpdateUserDto updateUserDto)
         {
-            keyword = keyword.Trim().ToLower();
+            // User Not Found
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
 
-            var users = _context.Users
-                .Where(u =>
-                    u.Name.ToLower().Contains(keyword) ||
-                    u.Email.ToLower().Contains(keyword) ||
-                    u.Id.ToString().Contains(keyword) ||
-                    u.RoleId.ToString().Contains(keyword) ||
-                    u.DepartmentId.ToString().Contains(keyword) ||
-                    (u.ManagerId != null && u.ManagerId.ToString().Contains(keyword))
-                )
-                .Select(u => new UserResponseDto
+            if (user == null)
+            {
+                return "User Not Found";
+            }
+
+            // Email Already Exists (Except Current User)
+            var existingUser = _context.Users
+                .FirstOrDefault(u => u.Email == updateUserDto.Email && u.Id != id);
+
+            if (existingUser != null)
+            {
+                return "Email already exists";
+            }
+
+            // Department Not Found
+            var department = _context.Departments
+                .FirstOrDefault(d => d.Id == updateUserDto.DepartmentId);
+
+            if (department == null)
+            {
+                return "Department Not Found";
+            }
+
+            // Employee Validation
+            if (updateUserDto.RoleId == 1)
+            {
+                // Employee must have Manager
+                if (updateUserDto.ManagerId == null)
                 {
-                    Id = u.Id,
-                    Name = u.Name,
-                    Email = u.Email,
-                    RoleId = u.RoleId,
-                    DepartmentId = u.DepartmentId,
-                    ManagerId = u.ManagerId
-                })
-                .ToList();
+                    return "ManagerId is required for Employees";
+                }
 
-            return users;
+                // Manager Exists
+                var manager = _context.Users
+                    .FirstOrDefault(u => u.Id == updateUserDto.ManagerId);
+
+                if (manager == null)
+                {
+                    return "Manager Not Found";
+                }
+
+                // Temporary validation
+                if (manager.RoleId != 2)
+                {
+                    return "Selected user is not a Manager";
+                }
+            }
+
+            // Non Employees should not have Manager
+            if (updateUserDto.RoleId != 1 && updateUserDto.ManagerId != null)
+            {
+                return "ManagerId should only be assigned to Employees";
+            }
+
+            // Update User
+            user.Name = updateUserDto.Name;
+            user.Email = updateUserDto.Email;
+            user.RoleId = updateUserDto.RoleId;
+            user.DepartmentId = updateUserDto.DepartmentId;
+            user.ManagerId = updateUserDto.ManagerId;
+
+            _context.SaveChanges();
+
+            return "User Updated Successfully";
         }
+
+
     }
 }

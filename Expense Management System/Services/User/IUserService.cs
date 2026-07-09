@@ -5,8 +5,17 @@ namespace Expense_Management_System.Services.User
     public interface IUserService
     {
         string CreateUser(CreateUserDto createUserDto);
-        List<UserResponseDto> GetAllUsers();
+        List<UserResponseDto> GetAllUsers
+        (
+         string? search,
+         int pageNumber,
+         int pageSize,
+         out int totalRecords
+        );
+
         UserResponseDto? GetUserById(int id);
-        List<UserResponseDto> SearchUsers(string keyword);
+
+        string UpdateUser(int id, UpdateUserDto updateUserDto);
+
     }
 }

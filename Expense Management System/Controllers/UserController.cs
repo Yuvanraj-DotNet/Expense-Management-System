@@ -31,11 +31,33 @@ namespace Expense_Management_System.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAllUsers()
+        public IActionResult GetAllUsers
+(
+    string? search = "",
+    int pageNumber = 1,
+    int pageSize = 10
+)
         {
-            var result = _userService.GetAllUsers();
+            int totalRecords;
 
-            return Ok(result);
+            var users = _userService.GetAllUsers
+            (
+                search,
+                pageNumber,
+                pageSize,
+                out totalRecords
+            );
+
+            int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
+            return Ok(new
+            {
+                TotalRecords = totalRecords,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages,
+                Data = users
+            });
         }
 
         [HttpGet("{id}")]
@@ -51,17 +73,19 @@ namespace Expense_Management_System.Controllers
             return Ok(user);
         }
 
-        [HttpGet("search")]
-        public IActionResult SearchUsers(string keyword)
+        [HttpPut("{id}")]
+        public IActionResult UpdateUser(int id, UpdateUserDto updateUserDto)
         {
-            var users = _userService.SearchUsers(keyword);
+            var result = _userService.UpdateUser(id, updateUserDto);
 
-            if (!users.Any())
+            if (result == "User Updated Successfully")
             {
-                return NotFound("No Users Found");
+                return Ok(result);
             }
 
-            return Ok(users);
+            return BadRequest(result);
         }
+
+
     }
 }

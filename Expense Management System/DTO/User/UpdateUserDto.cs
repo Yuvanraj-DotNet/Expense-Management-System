@@ -1,0 +1,22 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Expense_Management_System.DTOs.User
+{
+    public class UpdateUserDto
+    {
+        [Required(ErrorMessage = "Name is required")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid Email Format")]
+        public string Email { get; set; } = string.Empty;
+
+        [Range(1, 4, ErrorMessage = "Invalid Role")]
+        public int RoleId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Invalid Department")]
+        public int DepartmentId { get; set; }
+
+        public int? ManagerId { get; set; }
+    }
+}
