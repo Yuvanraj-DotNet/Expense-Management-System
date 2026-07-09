@@ -98,5 +98,23 @@ namespace Expense_Management_System.Services.User
 
             return users;
         }
+
+        public UserResponseDto? GetUserById(int id)
+        {
+            var user = _context.Users
+                .Where(u => u.Id == id)
+                .Select(u => new UserResponseDto
+                {
+                    Id = u.Id,
+                    Name = u.Name,
+                    Email = u.Email,
+                    RoleId = u.RoleId,
+                    DepartmentId = u.DepartmentId,
+                    ManagerId = u.ManagerId
+                })
+                .FirstOrDefault();
+
+            return user;
+        }
     }
 }

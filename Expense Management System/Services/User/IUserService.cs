@@ -6,5 +6,6 @@ namespace Expense_Management_System.Services.User
     {
         string CreateUser(CreateUserDto createUserDto);
         List<UserResponseDto> GetAllUsers();
+        UserResponseDto? GetUserById(int id);
     }
 }

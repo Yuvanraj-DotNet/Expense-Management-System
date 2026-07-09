@@ -37,5 +37,18 @@ namespace Expense_Management_System.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("{id}")]
+        public IActionResult GetUserById(int id)
+        {
+            var user = _userService.GetUserById(id);
+
+            if (user == null)
+            {
+                return NotFound("User Not Found");
+            }
+
+            return Ok(user);
+        }
     }
 }
