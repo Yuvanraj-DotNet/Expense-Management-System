@@ -6,5 +6,8 @@ namespace Expense_Management_System.Services.ExpenseCategory
     {
         string CreateCategory(CreateExpenseCategoryDto createExpenseCategoryDto);
         List<Models.ExpenseCategory> GetAllCategories();
+        Models.ExpenseCategory? GetCategoryById(int id);
+        string UpdateCategory(int id, UpdateExpenseCategoryDto updateExpenseCategoryDto);
+        string DeleteCategory(int id);
     }
 }

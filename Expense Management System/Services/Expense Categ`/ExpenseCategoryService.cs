@@ -15,9 +15,16 @@ namespace Expense_Management_System.Services.ExpenseCategory
 
         public string CreateCategory(CreateExpenseCategoryDto createExpenseCategoryDto)
         {
-            var existingCategory = _context.ExpenseCategories
-            .FirstOrDefault(c => c.Name == createExpenseCategoryDto.Name);
+            if (createExpenseCategoryDto.MaxAllowedAmount <= 0)
+            {
+                return "Maximum Allowed Amount must be greater than 0";
+            }
 
+            var categoryName = createExpenseCategoryDto.Name.Trim();
+
+            var existingCategory = _context.ExpenseCategories
+                .FirstOrDefault(c =>
+                    c.Name.ToLower() == categoryName.ToLower());
 
             if (existingCategory != null)
             {
@@ -26,7 +33,7 @@ namespace Expense_Management_System.Services.ExpenseCategory
 
             var category = new Models.ExpenseCategory
             {
-                Name = createExpenseCategoryDto.Name,
+                Name = categoryName,
                 MaxAllowedAmount = createExpenseCategoryDto.MaxAllowedAmount
             };
 
@@ -34,8 +41,6 @@ namespace Expense_Management_System.Services.ExpenseCategory
             _context.SaveChanges();
 
             return "Expense Category Created Successfully";
-
-
         }
 
         public List<Models.ExpenseCategory> GetAllCategories()
@@ -43,6 +48,61 @@ namespace Expense_Management_System.Services.ExpenseCategory
             return _context.ExpenseCategories.ToList();
         }
 
+        public Models.ExpenseCategory? GetCategoryById(int id)
+        {
+            return _context.ExpenseCategories
+                .FirstOrDefault(c => c.Id == id);
+        }
+
+        public string UpdateCategory(int id, UpdateExpenseCategoryDto updateExpenseCategoryDto)
+        {
+            var category = _context.ExpenseCategories
+                .FirstOrDefault(c => c.Id == id);
+
+            if (category == null)
+            {
+                return "Expense Category Not Found";
+            }
+
+            var existingCategory = _context.ExpenseCategories
+                .FirstOrDefault(c =>
+                    c.Name.ToLower() == updateExpenseCategoryDto.Name.Trim().ToLower()
+                    && c.Id != id);
+
+            if (existingCategory != null)
+            {
+                return "Expense Category Already Exists";
+            }
+
+            if (updateExpenseCategoryDto.MaxAllowedAmount <= 0)
+            {
+                return "Maximum Allowed Amount must be greater than 0";
+            }
+
+            category.Name = updateExpenseCategoryDto.Name.Trim();
+            category.MaxAllowedAmount = updateExpenseCategoryDto.MaxAllowedAmount;
+
+            _context.SaveChanges();
+
+            return "Expense Category Updated Successfully";
+        }
+
+
+        public string DeleteCategory(int id)
+        {
+            var category = _context.ExpenseCategories
+                .FirstOrDefault(c => c.Id == id);
+
+            if (category == null)
+            {
+                return "Expense Category Not Found";
+            }
+
+            _context.ExpenseCategories.Remove(category);
+            _context.SaveChanges();
+
+            return "Expense Category Deleted Successfully";
+        }
 
     }
 
