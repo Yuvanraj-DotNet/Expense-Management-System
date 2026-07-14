@@ -27,7 +27,12 @@ namespace Expense_Management_System.Controllers
 
             var result = _userService.CreateUser(createUserDto);
 
-            return Ok(result);
+            if (result == "User Created Successfully")
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
         }
 
         [HttpGet]
@@ -77,6 +82,11 @@ namespace Expense_Management_System.Controllers
         [HttpPut("{id}")]
         public IActionResult UpdateUser(int id, UpdateUserDto updateUserDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var result = _userService.UpdateUser(id, updateUserDto);
 
             if (result == "User Updated Successfully")

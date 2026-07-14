@@ -32,6 +32,11 @@ namespace Expense_Management_System.Services.User
                 return "Department Not Found";
             }
 
+            if (createUserDto.RoleId < 1 || createUserDto.RoleId > 4)
+            {
+                return "Invalid Role";
+            }
+
 
             // Employee Validation
             if (createUserDto.RoleId == 1)
@@ -51,12 +56,18 @@ namespace Expense_Management_System.Services.User
                     return "Manager Not Found";
                 }
 
-                // TEMPORARY
-                // This will be replaced later with Department.HeadUserId validation
+                // Must be Manager Role
                 if (manager.RoleId != 2)
                 {
                     return "Selected user is not a Manager";
                 }
+
+                // Manager must be Head of selected Department
+                if (department.HeadUserId != manager.Id)
+                {
+                    return "Selected Manager is not assigned as Head of this Department";
+                }
+          
             }
 
             // Non Employees should not have Manager
@@ -75,6 +86,30 @@ namespace Expense_Management_System.Services.User
                 DepartmentId = createUserDto.DepartmentId,
                 ManagerId = createUserDto.ManagerId
             };
+
+            // Only One Admin Allowed
+            if (createUserDto.RoleId == 4)
+            {
+                var adminExists = _context.Users
+                    .Any(u => u.RoleId == 4);
+
+                if (adminExists)
+                {
+                    return "Only one Admin is allowed";
+                }
+            }
+
+            // Only One Finance Allowed
+            if (createUserDto.RoleId == 3)
+            {
+                var financeExists = _context.Users
+                    .Any(u => u.RoleId == 3);
+
+                if (financeExists)
+                {
+                    return "Only one Finance user is allowed";
+                }
+            }
 
             _context.Users.Add(user);
             _context.SaveChanges();
@@ -175,6 +210,11 @@ namespace Expense_Management_System.Services.User
                 return "Department Not Found";
             }
 
+            if (updateUserDto.RoleId < 1 || updateUserDto.RoleId > 4)
+            {
+                return "Invalid Role";
+            }
+
             // Employee Validation
             if (updateUserDto.RoleId == 1)
             {
@@ -198,6 +238,12 @@ namespace Expense_Management_System.Services.User
                 {
                     return "Selected user is not a Manager";
                 }
+
+                if (department.HeadUserId != manager.Id)
+                {
+                    return "Selected Manager is not assigned as Head of this Department";
+                }
+
             }
 
             // Non Employees should not have Manager
@@ -205,6 +251,32 @@ namespace Expense_Management_System.Services.User
             {
                 return "ManagerId should only be assigned to Employees";
             }
+
+
+            // Only One Admin Allowed
+            if (updateUserDto.RoleId == 4)
+            {
+                var adminExists = _context.Users
+                    .Any(u => u.RoleId == 4 && u.Id != id);
+
+                if (adminExists)
+                {
+                    return "Only one Admin is allowed";
+                }
+            }
+
+            // Only One Finance Allowed
+            if (updateUserDto.RoleId == 3)
+            {
+                var financeExists = _context.Users
+                    .Any(u => u.RoleId == 3 && u.Id != id);
+
+                if (financeExists)
+                {
+                    return "Only one Finance user is allowed";
+                }
+            }
+
 
             // Update User
             user.Name = updateUserDto.Name;

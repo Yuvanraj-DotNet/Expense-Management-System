@@ -16,12 +16,47 @@ namespace Expense_Management_System.Services.Department
 
         public string CreateDepartment(CreateDepartmentDto createDepartmentDto)
         {
+            // Department Name Validation
             var departmentExists = _context.Departments
                 .Any(d => d.Name == createDepartmentDto.Name);
 
             if (departmentExists)
             {
                 return "Department Already Exists";
+            }
+
+            // Department Code Validation
+            var codeExists = _context.Departments
+                .Any(d => d.Code == createDepartmentDto.Code);
+
+            if (codeExists)
+            {
+                return "Department Code Already Exists";
+            }
+
+            // HeadUser Validation (Only if HeadUserId is provided)
+            if (createDepartmentDto.HeadUserId != null)
+            {
+                var user = _context.Users
+                    .FirstOrDefault(u => u.Id == createDepartmentDto.HeadUserId);
+
+                if (user == null)
+                {
+                    return "Selected Department Head Not Found";
+                }
+
+                if (user.RoleId != 2)
+                {
+                    return "Only Managers can be assigned as Department Head";
+                }
+
+                var alreadyAssigned = _context.Departments
+                    .FirstOrDefault(d => d.HeadUserId == createDepartmentDto.HeadUserId);
+
+                if (alreadyAssigned != null)
+                {
+                    return "This Manager is already assigned as another Department Head";
+                }
             }
 
             var department = new Expense_Management_System.Models.Department
@@ -32,7 +67,6 @@ namespace Expense_Management_System.Services.Department
             };
 
             _context.Departments.Add(department);
-
             _context.SaveChanges();
 
             return "Department Created Successfully";
@@ -94,6 +128,32 @@ namespace Expense_Management_System.Services.Department
             if (department == null)
             {
                 return "Department Not Found";
+            }
+
+            if (updateDepartmentDto.HeadUserId != null)
+            {
+                var user = _context.Users
+                    .FirstOrDefault(u => u.Id == updateDepartmentDto.HeadUserId);
+
+                if (user == null)
+                {
+                    return "Selected Department Head Not Found";
+                }
+
+                if (user.RoleId != 2)
+                {
+                    return "Only Managers can be assigned as Department Head";
+                }
+
+                var alreadyAssigned = _context.Departments
+                 .FirstOrDefault(d =>
+                 d.HeadUserId == updateDepartmentDto.HeadUserId &&
+                 d.Id != id);
+
+                if (alreadyAssigned != null)
+                {
+                    return "This Manager is already assigned as another Department Head";
+                }
             }
 
             department.Name = updateDepartmentDto.Name;
