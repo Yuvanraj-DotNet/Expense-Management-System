@@ -13,5 +13,9 @@ namespace Expense_Management_System.DTOs.Expense
         public string Status { get; set; } = string.Empty;
 
         public DateTime ExpenseDate { get; set; }
+
+        public string? ManagerComment { get; set; }
+
+        public DateTime? ActionDate { get; set; }
     }
 }

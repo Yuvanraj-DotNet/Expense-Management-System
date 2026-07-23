@@ -19,19 +19,38 @@ namespace Expense_Management_System.Controllers
         [HttpPost]
         public IActionResult CreateExpense(CreateExpenseDto createExpenseDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var result = _expenseService.CreateExpense(createExpenseDto);
 
-            return Ok(result);
+            if (result == "Expense Created Successfully")
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
         }
 
 
         [HttpPut("{id}")]
         public IActionResult UpdateExpense(int id, UpdateExpenseDto updateExpenseDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var result = _expenseService.UpdateExpense(id, updateExpenseDto);
 
-             return Ok(result);
+            if (result == "Expense Updated Successfully")
+            {
+                return Ok(result);
+            }
 
+            return BadRequest(result);
         }
 
 
@@ -60,10 +79,10 @@ namespace Expense_Management_System.Controllers
 
         }
 
-        [HttpGet("pending-approval")]
-        public IActionResult GetPendingApprovals()
+        [HttpGet("pending-approval/{managerId}")]
+        public IActionResult GetPendingApprovals(int managerId)
         {
-            var expenses = _expenseService.GetPendingApprovals();
+            var expenses = _expenseService.GetPendingApprovals(managerId);
 
             if (expenses.Count == 0)
             {
@@ -71,7 +90,6 @@ namespace Expense_Management_System.Controllers
             }
 
             return Ok(expenses);
-
         }
 
         [HttpPost("{id}/approve")]

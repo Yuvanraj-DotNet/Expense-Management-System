@@ -14,6 +14,7 @@ namespace Expense_Management_System.Services.Expense
 
         public string CreateExpense(CreateExpenseDto createExpenseDto)
         {
+            // User Exists
             var user = _context.Users
                 .FirstOrDefault(u => u.Id == createExpenseDto.UserId);
 
@@ -22,6 +23,13 @@ namespace Expense_Management_System.Services.Expense
                 return "User Not Found";
             }
 
+            // Only Employees can create Expense
+            if (user.RoleId != 1)
+            {
+                return "Only Employees can create expenses";
+            }
+
+            // Category Exists
             var category = _context.ExpenseCategories
                 .FirstOrDefault(c => c.Id == createExpenseDto.CategoryId);
 
@@ -30,14 +38,32 @@ namespace Expense_Management_System.Services.Expense
                 return "Expense Category Not Found";
             }
 
+            // Amount > 0
+            if (createExpenseDto.Amount <= 0)
+            {
+                return "Amount must be greater than 0";
+            }
+
+            // Category Limit
+            if (createExpenseDto.Amount > category.MaxAllowedAmount)
+            {
+                return $"Maximum allowed amount for {category.Name} is {category.MaxAllowedAmount}";
+            }
+
+            // Future Date
+            if (createExpenseDto.ExpenseDate.Date > DateTime.Today)
+            {
+                return "Expense Date cannot be in the future";
+            }
+
             var expense = new Models.Expense
             {
                 UserId = createExpenseDto.UserId,
                 CategoryId = createExpenseDto.CategoryId,
-                Title = createExpenseDto.Title,
+                Title = createExpenseDto.Title.Trim(),
                 Amount = createExpenseDto.Amount,
                 ExpenseDate = createExpenseDto.ExpenseDate,
-                Description = createExpenseDto.Description
+                Description = createExpenseDto.Description.Trim()
             };
 
             _context.Expenses.Add(expense);
@@ -56,11 +82,40 @@ namespace Expense_Management_System.Services.Expense
                 return "Expense Not Found";
             }
 
+            // Cannot Edit Submitted Expense
+            if (expense.Status != "Draft")
+            {
+                return "Only Draft Expenses can be updated";
+            }
+
+            var category = _context.ExpenseCategories
+                .FirstOrDefault(c => c.Id == updateExpenseDto.CategoryId);
+
+            if (category == null)
+            {
+                return "Expense Category Not Found";
+            }
+
+            if (updateExpenseDto.Amount <= 0)
+            {
+                return "Amount must be greater than 0";
+            }
+
+            if (updateExpenseDto.Amount > category.MaxAllowedAmount)
+            {
+                return $"Maximum allowed amount for {category.Name} is {category.MaxAllowedAmount}";
+            }
+
+            if (updateExpenseDto.ExpenseDate.Date > DateTime.Today)
+            {
+                return "Expense Date cannot be in the future";
+            }
+
             expense.CategoryId = updateExpenseDto.CategoryId;
-            expense.Title = updateExpenseDto.Title;
+            expense.Title = updateExpenseDto.Title.Trim();
             expense.Amount = updateExpenseDto.Amount;
             expense.ExpenseDate = updateExpenseDto.ExpenseDate;
-            expense.Description = updateExpenseDto.Description;
+            expense.Description = updateExpenseDto.Description.Trim();
 
             _context.SaveChanges();
 
@@ -69,17 +124,34 @@ namespace Expense_Management_System.Services.Expense
 
         public List<ExpenseResponseDto> GetMyExpenses(int userId)
         {
-            var expenses = _context.Expenses
-                .Where(e => e.UserId == userId)
-                .Select(e => new ExpenseResponseDto
-                {
-                    Id = e.Id,
-                    Title = e.Title,
-                    Amount = e.Amount,
-                    Status = e.Status,
-                    ExpenseDate = e.ExpenseDate
-                })
-                .ToList();
+            var expenses = (from expense in _context.Expenses
+
+                            join approval in _context.ExpenseApprovals
+                            on expense.Id equals approval.ExpenseId into approvalGroup
+
+                            from approval in approvalGroup
+                                .OrderByDescending(a => a.ActionDate)
+                                .Take(1)
+                                .DefaultIfEmpty()
+
+                            where expense.UserId == userId
+
+                            select new ExpenseResponseDto
+                            {
+                                Id = expense.Id,
+                                Title = expense.Title,
+                                Amount = expense.Amount,
+                                Status = expense.Status,
+                                ExpenseDate = expense.ExpenseDate,
+
+                                ManagerComment = approval != null
+                                    ? approval.Comment
+                                    : null,
+
+                                ActionDate = approval != null
+                                    ? approval.ActionDate
+                                    : null
+                            }).ToList();
 
             return expenses;
         }
@@ -106,19 +178,36 @@ namespace Expense_Management_System.Services.Expense
             return "Expense Submitted Successfully";
         }
 
-        public List<ExpenseResponseDto> GetPendingApprovals()
+        public List<ExpenseResponseDto> GetPendingApprovals(int managerId)
         {
-            var expenses = _context.Expenses
-                .Where(e => e.Status == "Submitted")
-                .Select(e => new ExpenseResponseDto
-                {
-                    Id = e.Id,
-                    Title = e.Title,
-                    Amount = e.Amount,
-                    Status = e.Status,
-                    ExpenseDate = e.ExpenseDate
-                })
-                .ToList();
+            var manager = _context.Users
+                .FirstOrDefault(u => u.Id == managerId);
+
+            // Manager must exist
+            if (manager == null)
+            {
+                return new List<ExpenseResponseDto>();
+            }
+
+            // Only Managers can view pending approvals
+            if (manager.RoleId != 2)
+            {
+                return new List<ExpenseResponseDto>();
+            }
+
+            var expenses = (from expense in _context.Expenses
+                            join user in _context.Users
+                                on expense.UserId equals user.Id
+                            where expense.Status == "Submitted"
+                                  && user.DepartmentId == manager.DepartmentId
+                            select new ExpenseResponseDto
+                            {
+                                Id = expense.Id,
+                                Title = expense.Title,
+                                Amount = expense.Amount,
+                                Status = expense.Status,
+                                ExpenseDate = expense.ExpenseDate
+                            }).ToList();
 
             return expenses;
         }
@@ -173,6 +262,11 @@ namespace Expense_Management_System.Services.Expense
                 return "Only Submitted Expenses Can Be Rejected";
             }
 
+            if (string.IsNullOrWhiteSpace(rejectExpenseDto.Comment))
+            {
+                return "Reject Reason is Required";
+            }
+
             expense.Status = "Rejected";
 
             var expenseApproval = new Models.ExpenseApproval
@@ -180,7 +274,7 @@ namespace Expense_Management_System.Services.Expense
                 ExpenseId = expense.Id,
                 ApproverId = rejectExpenseDto.ManagerId,
                 Action = "Rejected",
-                Comment = rejectExpenseDto.Comment,
+                Comment = rejectExpenseDto.Comment.Trim(),
                 ActionDate = DateTime.Now
             };
 
