@@ -17,7 +17,7 @@ namespace Expense_Management_System.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateExpense(CreateExpenseDto createExpenseDto)
+        public IActionResult CreateExpense([FromForm] CreateExpenseDto createExpenseDto)
         {
             if (!ModelState.IsValid)
             {
@@ -36,7 +36,9 @@ namespace Expense_Management_System.Controllers
 
 
         [HttpPut("{id}")]
-        public IActionResult UpdateExpense(int id, UpdateExpenseDto updateExpenseDto)
+        public IActionResult UpdateExpense(
+            int id,
+           [FromForm] UpdateExpenseDto updateExpenseDto)
         {
             if (!ModelState.IsValid)
             {

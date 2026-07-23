@@ -24,5 +24,7 @@ namespace Expense_Management_System.DTOs.Expense
         [Required(ErrorMessage = "Description is Required")]
         [StringLength(500)]
         public string Description { get; set; } = string.Empty;
+
+        public IFormFile? Receipt { get; set; }
     }
 }

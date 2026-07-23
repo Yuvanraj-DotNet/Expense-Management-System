@@ -1,15 +1,20 @@
 ﻿using Expense_Management_System.Data;
 using Expense_Management_System.DTOs.Expense;
+using System.Text.RegularExpressions;
 
 namespace Expense_Management_System.Services.Expense
 {
     public class ExpenseService : IExpenseService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public ExpenseService(ApplicationDbContext context)
+        public ExpenseService(
+               ApplicationDbContext context,
+               IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         public string CreateExpense(CreateExpenseDto createExpenseDto)
@@ -56,6 +61,51 @@ namespace Expense_Management_System.Services.Expense
                 return "Expense Date cannot be in the future";
             }
 
+            // Receipt Validation
+            if (createExpenseDto.Receipt == null || createExpenseDto.Receipt.Length == 0)
+            {
+                return "Receipt is required";
+            }
+
+            // Allowed File Types
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+
+            var extension = Path.GetExtension(createExpenseDto.Receipt.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                return "Only JPG, JPEG, PNG and PDF files are allowed";
+            }
+
+            // Maximum File Size (5 MB)
+            if (createExpenseDto.Receipt.Length > 5 * 1024 * 1024)
+            {
+                return "Receipt file size cannot exceed 5 MB";
+            }
+
+            // Create Receipts Folder
+            var receiptsFolder = Path.Combine(_environment.WebRootPath, "Receipts");
+
+            if (!Directory.Exists(receiptsFolder))
+            {
+                Directory.CreateDirectory(receiptsFolder);
+            }
+
+            // Generate Unique File Name
+            var fileName = Guid.NewGuid().ToString() +
+            Path.GetExtension(createExpenseDto.Receipt.FileName);
+
+
+
+            // Full File Path
+            var filePath = Path.Combine(receiptsFolder, fileName);
+
+            // Save Receipt File
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                createExpenseDto.Receipt.CopyTo(stream);
+            }
+
             var expense = new Models.Expense
             {
                 UserId = createExpenseDto.UserId,
@@ -63,7 +113,8 @@ namespace Expense_Management_System.Services.Expense
                 Title = createExpenseDto.Title.Trim(),
                 Amount = createExpenseDto.Amount,
                 ExpenseDate = createExpenseDto.ExpenseDate,
-                Description = createExpenseDto.Description.Trim()
+                Description = createExpenseDto.Description.Trim(),
+                ReceiptPath = fileName
             };
 
             _context.Expenses.Add(expense);
@@ -74,6 +125,7 @@ namespace Expense_Management_System.Services.Expense
 
         public string UpdateExpense(int id, UpdateExpenseDto updateExpenseDto)
         {
+            // Expense Exists
             var expense = _context.Expenses
                 .FirstOrDefault(e => e.Id == id);
 
@@ -82,12 +134,13 @@ namespace Expense_Management_System.Services.Expense
                 return "Expense Not Found";
             }
 
-            // Cannot Edit Submitted Expense
+            // Only Draft Expenses Can Be Updated
             if (expense.Status != "Draft")
             {
-                return "Only Draft Expenses can be updated";
+                return "Only Draft Expenses Can Be Updated";
             }
 
+            // Category Exists
             var category = _context.ExpenseCategories
                 .FirstOrDefault(c => c.Id == updateExpenseDto.CategoryId);
 
@@ -96,20 +149,83 @@ namespace Expense_Management_System.Services.Expense
                 return "Expense Category Not Found";
             }
 
+            // Amount Validation
             if (updateExpenseDto.Amount <= 0)
             {
                 return "Amount must be greater than 0";
             }
 
+            // Category Maximum Limit
             if (updateExpenseDto.Amount > category.MaxAllowedAmount)
             {
                 return $"Maximum allowed amount for {category.Name} is {category.MaxAllowedAmount}";
             }
 
+            // Future Date Validation
             if (updateExpenseDto.ExpenseDate.Date > DateTime.Today)
             {
                 return "Expense Date cannot be in the future";
             }
+
+            // ===========================
+            // Receipt Upload (Optional)
+            // ===========================
+
+            if (updateExpenseDto.Receipt != null)
+            {
+                // Allowed File Types
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+
+                var extension = Path.GetExtension(updateExpenseDto.Receipt.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return "Only JPG, JPEG, PNG and PDF files are allowed";
+                }
+
+                // Maximum File Size (5 MB)
+                if (updateExpenseDto.Receipt.Length > 5 * 1024 * 1024)
+                {
+                    return "Receipt file size cannot exceed 5 MB";
+                }
+
+                // Receipts Folder
+                var receiptsFolder = Path.Combine(_environment.WebRootPath!, "Receipts");
+
+                if (!Directory.Exists(receiptsFolder))
+                {
+                    Directory.CreateDirectory(receiptsFolder);
+                }
+
+                // Delete Old Receipt
+                if (!string.IsNullOrWhiteSpace(expense.ReceiptPath))
+                {
+                    var oldFile = Path.Combine(receiptsFolder, expense.ReceiptPath);
+
+                    if (File.Exists(oldFile))
+                    {
+                        File.Delete(oldFile);
+                    }
+                }
+
+                // Generate New File Name
+                var fileName = Guid.NewGuid().ToString() +
+                    Path.GetExtension(updateExpenseDto.Receipt.FileName);
+
+                // Save New Receipt
+                var filePath = Path.Combine(receiptsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    updateExpenseDto.Receipt.CopyTo(stream);
+                }
+
+                expense.ReceiptPath = fileName;
+            }
+
+            // ===========================
+            // Update Expense
+            // ===========================
 
             expense.CategoryId = updateExpenseDto.CategoryId;
             expense.Title = updateExpenseDto.Title.Trim();
@@ -396,6 +512,7 @@ namespace Expense_Management_System.Services.Expense
                                     join approval in _context.ExpenseApprovals
                                         on expense.Id equals approval.ExpenseId
                                     where expense.Status == "Approved"
+                                      && approval.Action == "Approved"
                                     select new ApprovedExpenseDto
                                     {
                                         ExpenseId = expense.Id,
@@ -420,9 +537,57 @@ namespace Expense_Management_System.Services.Expense
                 return "Expense Not Found";
             }
 
+            // Expense Status Validation
+            if (expense.Status == "Reimbursed")
+            {
+                return "Expense has already been reimbursed";
+            }
+
+            if (expense.Status == "Rejected")
+            {
+                return "Rejected expenses cannot be reimbursed";
+            }
+
+            if (expense.Status == "Submitted")
+            {
+                return "Expense must be approved before reimbursement";
+            }
+
+            if (expense.Status == "Draft")
+            {
+                return "Draft expenses cannot be reimbursed";
+            }
+
             if (expense.Status != "Approved")
             {
-                return "Only Approved Expenses Can Be Reimbursed";
+                return "Only approved expenses can be reimbursed";
+            }
+
+            // Finance User Exists
+            var financeUser = _context.Users
+                .FirstOrDefault(u => u.Id == reimburseExpenseDto.ProcessedBy);
+
+            if (financeUser == null)
+            {
+                return "Finance User Not Found";
+            }
+
+            // Only Finance Can Reimburse
+            if (financeUser.RoleId != 3)
+            {
+                return "Only Finance Users Can Reimburse Expenses";
+            }
+
+            // Reference Number Validation
+            if (string.IsNullOrWhiteSpace(reimburseExpenseDto.ReferenceNumber))
+            {
+                return "Reference Number is Required";
+            }
+
+            if (!Regex.IsMatch(reimburseExpenseDto.ReferenceNumber,
+                @"^(BANK|NEFT|RTGS|IMPS|UPI)\d{6,12}$"))
+            {
+                return "Enter a valid payment reference number";
             }
 
             var reimbursement = new Models.Reimbursement
@@ -430,7 +595,7 @@ namespace Expense_Management_System.Services.Expense
                 ExpenseId = expense.Id,
                 ProcessedBy = reimburseExpenseDto.ProcessedBy,
                 PaymentDate = DateTime.Now,
-                ReferenceNumber = reimburseExpenseDto.ReferenceNumber,
+                ReferenceNumber = reimburseExpenseDto.ReferenceNumber.Trim(),
                 Amount = expense.Amount
             };
 
