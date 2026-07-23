@@ -214,6 +214,7 @@ namespace Expense_Management_System.Services.Expense
 
         public string ApproveExpense(int id, ApproveExpenseDto approveExpenseDto)
         {
+            // Expense Exists
             var expense = _context.Expenses
                 .FirstOrDefault(e => e.Id == id);
 
@@ -222,12 +223,58 @@ namespace Expense_Management_System.Services.Expense
                 return "Expense Not Found";
             }
 
-            if (expense.Status != "Submitted")
+            // Expense Status Validation
+            if (expense.Status == "Approved")
             {
-                return "Only Submitted Expenses Can Be Approved";
+                return "Expense is already approved";
             }
 
-            // Update Expense Status
+            if (expense.Status == "Rejected")
+            {
+                return "Rejected expenses cannot be approved";
+            }
+
+            if (expense.Status == "Reimbursed")
+            {
+                return "Reimbursed expenses cannot be approved";
+            }
+
+            if (expense.Status != "Submitted")
+            {
+                return "Only submitted expenses can be approved";
+            }
+
+            // Manager Exists
+            var manager = _context.Users
+                .FirstOrDefault(u => u.Id == approveExpenseDto.ManagerId);
+
+            if (manager == null)
+            {
+                return "Manager Not Found";
+            }
+
+            // Only Department Managers
+            if (manager.RoleId != 2)
+            {
+                return "Only Department Managers Can Approve Expenses";
+            }
+
+            // Employee Exists
+            var employee = _context.Users
+                .FirstOrDefault(u => u.Id == expense.UserId);
+
+            if (employee == null)
+            {
+                return "Employee Not Found";
+            }
+
+            // Same Department Validation
+            if (employee.DepartmentId != manager.DepartmentId)
+            {
+                return "You are not authorized to approve this employee's expense";
+            }
+
+            // Approve Expense
             expense.Status = "Approved";
 
             // Save Approval History
@@ -236,7 +283,9 @@ namespace Expense_Management_System.Services.Expense
                 ExpenseId = expense.Id,
                 ApproverId = approveExpenseDto.ManagerId,
                 Action = "Approved",
-                Comment = approveExpenseDto.Comment,
+                Comment = string.IsNullOrWhiteSpace(approveExpenseDto.Comment)
+                    ? "Approved by Department Manager"
+                    : approveExpenseDto.Comment.Trim(),
                 ActionDate = DateTime.Now
             };
 
@@ -247,8 +296,10 @@ namespace Expense_Management_System.Services.Expense
             return "Expense Approved Successfully";
         }
 
+
         public string RejectExpense(int id, RejectExpenseDto rejectExpenseDto)
         {
+            // Expense Exists
             var expense = _context.Expenses
                 .FirstOrDefault(e => e.Id == id);
 
@@ -257,19 +308,68 @@ namespace Expense_Management_System.Services.Expense
                 return "Expense Not Found";
             }
 
-            if (expense.Status != "Submitted")
+            // Expense Status Validation
+            if (expense.Status == "Rejected")
             {
-                return "Only Submitted Expenses Can Be Rejected";
+                return "Expense is already rejected";
             }
 
+            if (expense.Status == "Approved")
+            {
+                return "Approved expenses cannot be rejected";
+            }
+
+            if (expense.Status == "Reimbursed")
+            {
+                return "Reimbursed expenses cannot be rejected";
+            }
+
+            if (expense.Status != "Submitted")
+            {
+                return "Only submitted expenses can be rejected";
+            }
+
+            // Reject Reason Mandatory
             if (string.IsNullOrWhiteSpace(rejectExpenseDto.Comment))
             {
                 return "Reject Reason is Required";
             }
 
+            // Manager Exists
+            var manager = _context.Users
+                .FirstOrDefault(u => u.Id == rejectExpenseDto.ManagerId);
+
+            if (manager == null)
+            {
+                return "Manager Not Found";
+            }
+
+            // Only Department Managers
+            if (manager.RoleId != 2)
+            {
+                return "Only Department Managers Can Reject Expenses";
+            }
+
+            // Employee Exists
+            var employee = _context.Users
+                .FirstOrDefault(u => u.Id == expense.UserId);
+
+            if (employee == null)
+            {
+                return "Employee Not Found";
+            }
+
+            // Same Department Validation
+            if (employee.DepartmentId != manager.DepartmentId)
+            {
+                return "You are not authorized to reject this employee's expense";
+            }
+
+            // Reject Expense
             expense.Status = "Rejected";
 
-            var expenseApproval = new Models.ExpenseApproval
+            // Save Approval History
+            var approval = new Models.ExpenseApproval
             {
                 ExpenseId = expense.Id,
                 ApproverId = rejectExpenseDto.ManagerId,
@@ -278,12 +378,13 @@ namespace Expense_Management_System.Services.Expense
                 ActionDate = DateTime.Now
             };
 
-            _context.ExpenseApprovals.Add(expenseApproval);
+            _context.ExpenseApprovals.Add(approval);
 
             _context.SaveChanges();
 
             return "Expense Rejected Successfully";
         }
+
 
         public List<ApprovedExpenseDto> GetApprovedExpenses()
         {
