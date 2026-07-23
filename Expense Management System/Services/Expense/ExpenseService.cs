@@ -1,6 +1,8 @@
 ﻿using Expense_Management_System.Data;
 using Expense_Management_System.DTOs.Expense;
+using Expense_Management_System.DTOs.Reports;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Expense_Management_System.Services.Expense
 {
@@ -608,7 +610,83 @@ namespace Expense_Management_System.Services.Expense
             return "Expense Reimbursed Successfully";
         }
 
+        public List<MonthlyReportDto> GetMonthlyReport(int month, int year)
+        {
+            if (month < 1 || month > 12)
+            {
+                return new List<MonthlyReportDto>();
+            }
 
+            if (year < 2025 || year > DateTime.Now.Year)
+            {
+                return new List<MonthlyReportDto>();
+            }
 
+            var monthlyReport =
+                (from expense in _context.Expenses
+
+                 join user in _context.Users
+                     on expense.UserId equals user.Id
+
+                 join department in _context.Departments
+                     on user.DepartmentId equals department.Id
+
+                 where expense.ExpenseDate.Month == month
+                    && expense.ExpenseDate.Year == year
+                    && expense.Status != "Draft"
+
+                 group expense by new
+                 {
+                     department.Id,
+                     department.Name
+                 } into departmentGroup
+
+                 select new MonthlyReportDto
+                 {
+                     Month = new DateTime(year, month, 1).ToString("MMMM yyyy"),
+
+                     DepartmentName = departmentGroup.Key.Name,
+
+                     TotalExpenses = departmentGroup.Count(),
+
+                     TotalAmount = departmentGroup.Sum(e => e.Amount),
+
+                     ApprovedExpenses = departmentGroup.Count(e => e.Status == "Approved"),
+
+                     RejectedExpenses = departmentGroup.Count(e => e.Status == "Rejected"),
+
+                     ReimbursedExpenses = departmentGroup.Count(e => e.Status == "Reimbursed")
+                 }).ToList();
+
+            return monthlyReport;
+        }
+
+        public byte[] ExportMonthlyReport(int month, int year)
+        {
+            var report = GetMonthlyReport(month, year);
+
+            if (report.Count == 0)
+            {
+                return Array.Empty<byte>();
+            }
+
+            var csv = new StringBuilder();
+
+            csv.AppendLine("Month,Department,TotalExpenses,TotalAmount,ApprovedExpenses,RejectedExpenses,ReimbursedExpenses");
+
+            foreach (var item in report)
+            {
+                csv.AppendLine(
+                    $"{item.Month}," +
+                    $"{item.DepartmentName}," +
+                    $"{item.TotalExpenses}," +
+                    $"{item.TotalAmount}," +
+                    $"{item.ApprovedExpenses}," +
+                    $"{item.RejectedExpenses}," +
+                    $"{item.ReimbursedExpenses}");
+            }
+
+            return Encoding.UTF8.GetBytes(csv.ToString());
+        }
     }
 }

@@ -131,7 +131,33 @@ namespace Expense_Management_System.Controllers
             return Ok(result);
         }
 
+        [HttpGet("monthly")]
+        public IActionResult GetMonthlyReport(int month, int year)
+        {
+            var report = _expenseService.GetMonthlyReport(month, year);
 
+            if (report.Count == 0)
+            {
+                return NotFound("No Monthly Report Found");
+            }
+
+            return Ok(report);
+        }
+
+        [HttpGet("export")]
+        public IActionResult ExportMonthlyReport(int month, int year)
+        {
+            var file = _expenseService.ExportMonthlyReport(month, year);
+
+            if (file.Length == 0)
+            {
+                return NotFound("No report found");
+            }
+
+            var fileName = $"MonthlyReport_{month}_{year}.csv";
+
+            return File(file, "text/csv", fileName);
+        }
 
 
     }
