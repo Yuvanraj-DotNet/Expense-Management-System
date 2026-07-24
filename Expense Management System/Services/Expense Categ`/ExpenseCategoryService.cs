@@ -43,9 +43,45 @@ namespace Expense_Management_System.Services.ExpenseCategory
             return "Expense Category Created Successfully";
         }
 
-        public List<Models.ExpenseCategory> GetAllCategories()
+        public List<ExpenseCategoryResponseDto> GetAllCategories
+            (
+                 string? search,
+                 int pageNumber,
+                 int pageSize,
+                 out int totalRecords
+            )
+
         {
-            return _context.ExpenseCategories.ToList();
+            var query = _context.ExpenseCategories.AsQueryable();
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+
+                query = query.Where(c =>
+                    c.Id.ToString().Contains(search) ||
+                    c.Name.ToLower().Contains(search) ||
+                    c.MaxAllowedAmount.ToString().Contains(search));
+            }
+
+            // Total Records
+            totalRecords = query.Count();
+
+            // Pagination
+            var categories = query
+                .OrderBy(c => c.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new ExpenseCategoryResponseDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    MaxAllowedAmount = c.MaxAllowedAmount
+                })
+                .ToList();
+
+            return categories;
         }
 
         public Models.ExpenseCategory? GetCategoryById(int id)

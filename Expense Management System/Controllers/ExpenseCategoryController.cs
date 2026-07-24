@@ -37,16 +37,29 @@ namespace Expense_Management_System.Controllers
 
 
         [HttpGet]
-        public IActionResult GetAllCategories()
+        public IActionResult GetAllCategories(
+            string? search,
+            int pageNumber = 1,
+            int pageSize = 10)
         {
-            var result = _expenseCategoryService.GetAllCategories();
+            var result = _expenseCategoryService.GetAllCategories(
+                search,
+                pageNumber,
+                pageSize,
+                out int totalRecords);
 
             if (result.Count == 0)
             {
                 return NotFound("No Expense Categories Found");
             }
 
-            return Ok(result);
+            return Ok(new
+            {
+                TotalRecords = totalRecords,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Data = result
+            });
         }
 
 
