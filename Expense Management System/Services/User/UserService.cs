@@ -1,16 +1,19 @@
 ﻿using Expense_Management_System.Data;
 using Expense_Management_System.DTOs.User;
 using Expense_Management_System.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Expense_Management_System.Services.User
 {
     public class UserService : IUserService
     {
         private readonly ApplicationDbContext _context;
+        private readonly PasswordHasher<Expense_Management_System.Models.User> _passwordHasher;
 
         public UserService(ApplicationDbContext context)
         {
             _context = context;
+            _passwordHasher = new PasswordHasher<Expense_Management_System.Models.User>();
         }
 
         public string CreateUser(CreateUserDto createUserDto)
@@ -81,11 +84,13 @@ namespace Expense_Management_System.Services.User
             {
                 Name = createUserDto.Name,
                 Email = createUserDto.Email,
-                PasswordHash = createUserDto.Password,
                 RoleId = createUserDto.RoleId,
                 DepartmentId = createUserDto.DepartmentId,
                 ManagerId = createUserDto.ManagerId
             };
+
+            // Hash Password
+            user.PasswordHash = _passwordHasher.HashPassword(user, createUserDto.Password);
 
             // Only One Admin Allowed
             if (createUserDto.RoleId == 4)

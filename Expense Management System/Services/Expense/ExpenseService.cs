@@ -274,6 +274,82 @@ namespace Expense_Management_System.Services.Expense
             return expenses;
         }
 
+        public List<ExpenseListResponseDto> GetAllExpenses
+             (
+                string? search,
+               int pageNumber,
+               int pageSize,
+               out int totalRecords
+             )
+
+        {
+            var query =
+
+                from expense in _context.Expenses
+
+                join user in _context.Users
+                    on expense.UserId equals user.Id
+
+                join category in _context.ExpenseCategories
+                    on expense.CategoryId equals category.Id
+
+                select new ExpenseListResponseDto
+                {
+                    Id = expense.Id,
+
+                    EmployeeName = user.Name,
+
+                    CategoryName = category.Name,
+
+                    Title = expense.Title,
+
+                    Amount = expense.Amount,
+
+                    ExpenseDate = expense.ExpenseDate,
+
+                    Status = expense.Status
+                };
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+
+                query = query.Where(e =>
+
+                    e.Id.ToString().Contains(search) ||
+
+                    e.EmployeeName.ToLower().Contains(search) ||
+
+                    e.CategoryName.ToLower().Contains(search) ||
+
+                    e.Title.ToLower().Contains(search) ||
+
+                    e.Status.ToLower().Contains(search) ||
+
+                    e.Amount.ToString().Contains(search)
+                );
+            }
+
+            // Total Records
+            totalRecords = query.Count();
+
+            // Pagination
+            var expenses = query
+
+               .OrderBy(e => e.Id)
+
+                .Skip((pageNumber - 1) * pageSize)
+
+                .Take(pageSize)
+
+                .ToList();
+
+            return expenses;
+        }
+
+
+
         public string SubmitExpense(int id)
         {
             var expense = _context.Expenses
@@ -527,6 +603,64 @@ namespace Expense_Management_System.Services.Expense
                                     }).ToList();
 
             return approvedExpenses;
+        }
+
+
+        public List<ReimbursementResponseDto> GetAllReimbursements
+             (
+                   string? search,
+                   int pageNumber,
+                   int pageSize,
+                   out int totalRecords
+             )
+
+        {
+            var query =
+                from reimbursement in _context.Reimbursements
+
+                join expense in _context.Expenses
+                    on reimbursement.ExpenseId equals expense.Id
+
+                join employee in _context.Users
+                    on expense.UserId equals employee.Id
+
+                join finance in _context.Users
+                    on reimbursement.ProcessedBy equals finance.Id
+
+                select new ReimbursementResponseDto
+                {
+                    ReimbursementId = reimbursement.Id,
+                    ExpenseId = reimbursement.ExpenseId,
+                    EmployeeName = employee.Name,
+                    Amount = reimbursement.Amount,
+                    PaymentDate = reimbursement.PaymentDate,
+                    ReferenceNumber = reimbursement.ReferenceNumber,
+                    ProcessedBy = finance.Name
+                };
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+
+                query = query.Where(r =>
+                    r.ReimbursementId.ToString().Contains(search) ||
+                    r.ExpenseId.ToString().Contains(search) ||
+                    r.EmployeeName.ToLower().Contains(search) ||
+                    r.ReferenceNumber.ToLower().Contains(search) ||
+                    r.Amount.ToString().Contains(search) ||
+                    r.ProcessedBy.ToLower().Contains(search));
+            }
+
+            // Total Records
+            totalRecords = query.Count();
+
+            // Pagination
+            return query
+                .OrderBy(r => r.ReimbursementId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
         }
 
         public string ReimburseExpense(int id, ReimburseExpenseDto reimburseExpenseDto)

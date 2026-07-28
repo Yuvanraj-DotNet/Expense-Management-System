@@ -72,6 +72,38 @@ namespace Expense_Management_System.Controllers
 
         }
 
+
+        [HttpGet]
+        public IActionResult GetAllExpenses
+(
+    string? search,
+    int pageNumber = 1,
+    int pageSize = 10
+)
+        {
+            var expenses = _expenseService.GetAllExpenses(
+                search,
+                pageNumber,
+                pageSize,
+                out int totalRecords
+            );
+
+            if (expenses.Count == 0)
+            {
+                return NotFound("No Expenses Found");
+            }
+
+            return Ok(new
+            {
+                TotalRecords = totalRecords,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Data = expenses
+            });
+        }
+
+
+
         [HttpPost("{id}/submit")]
         public IActionResult SubmitExpense(int id)
         {
@@ -122,6 +154,41 @@ namespace Expense_Management_System.Controllers
 
             return Ok(result);
         }
+
+
+        [HttpGet("reimbursements")]
+        public IActionResult GetAllReimbursements
+          (
+              string? search,
+              int pageNumber = 1,
+              int pageSize = 10
+          )
+
+        {
+            var reimbursements = _expenseService.GetAllReimbursements
+            (
+                search,
+                pageNumber,
+                pageSize,
+                out int totalRecords
+            );
+
+            if (reimbursements.Count == 0)
+            {
+                return NotFound("No Reimbursements Found");
+            }
+
+            return Ok(new
+            {
+                TotalRecords = totalRecords,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Data = reimbursements
+            });
+        }
+
+
+
 
         [HttpPost("{id}/reimburse")]
         public IActionResult ReimburseExpense(int id, ReimburseExpenseDto reimburseExpenseDto)
