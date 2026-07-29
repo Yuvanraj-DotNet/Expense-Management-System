@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 namespace Expense_Management_System.Controllers
 {
 
-    [Authorize]
+    [Authorize(Roles = "4")]
+
     [ApiController]
     [Route("api/[controller]")]
     public class DepartmentController : ControllerBase

@@ -19,6 +19,8 @@ namespace Expense_Management_System.Controllers
             _expenseService = expenseService;
         }
 
+
+        [Authorize(Roles = "1")]
         [HttpPost]
         public IActionResult CreateExpense([FromForm] CreateExpenseDto createExpenseDto)
         {
@@ -38,7 +40,10 @@ namespace Expense_Management_System.Controllers
         }
 
 
+
+        [Authorize(Roles = "1")]
         [HttpPut("{id}")]
+
         public IActionResult UpdateExpense(
             int id,
            [FromForm] UpdateExpenseDto updateExpenseDto)
@@ -60,6 +65,8 @@ namespace Expense_Management_System.Controllers
 
 
         [HttpGet("my")]
+        [Authorize(Roles = "1")]
+
         public IActionResult GetMyExpenses(int userId)
         {
             var expenses = _expenseService.GetMyExpenses(userId);
@@ -75,14 +82,15 @@ namespace Expense_Management_System.Controllers
 
         }
 
-
+        [Authorize(Roles = "2,3,4")]
         [HttpGet]
+
         public IActionResult GetAllExpenses
-(
-    string? search,
-    int pageNumber = 1,
-    int pageSize = 10
-)
+          (
+             string? search,
+             int pageNumber = 1,
+             int pageSize = 10
+          )
         {
             var expenses = _expenseService.GetAllExpenses(
                 search,
@@ -107,7 +115,9 @@ namespace Expense_Management_System.Controllers
 
 
 
+        [Authorize(Roles = "1")]
         [HttpPost("{id}/submit")]
+
         public IActionResult SubmitExpense(int id)
         {
             var result = _expenseService.SubmitExpense(id);
@@ -116,7 +126,10 @@ namespace Expense_Management_System.Controllers
 
         }
 
+
+        [Authorize(Roles = "2")]
         [HttpGet("pending-approval/{managerId}")]
+
         public IActionResult GetPendingApprovals(int managerId)
         {
             var expenses = _expenseService.GetPendingApprovals(managerId);
@@ -129,7 +142,9 @@ namespace Expense_Management_System.Controllers
             return Ok(expenses);
         }
 
+        [Authorize(Roles = "2")]
         [HttpPost("{id}/approve")]
+
         public IActionResult ApproveExpense(int id, ApproveExpenseDto approveExpenseDto)
         {
             var result = _expenseService.ApproveExpense(id, approveExpenseDto);
@@ -137,7 +152,10 @@ namespace Expense_Management_System.Controllers
             return Ok(result);
         }
 
+
+        [Authorize(Roles = "2")]
         [HttpPost("{id}/reject")]
+
         public IActionResult RejectExpense(int id, RejectExpenseDto rejectExpenseDto)
         {
             var result = _expenseService.RejectExpense(id, rejectExpenseDto);
@@ -145,7 +163,10 @@ namespace Expense_Management_System.Controllers
             return Ok(result);
         }
 
+
+        [Authorize(Roles = "3,4")]
         [HttpGet("approved")]
+
         public IActionResult GetApprovedExpenses()
         {
             var result = _expenseService.GetApprovedExpenses();
@@ -159,7 +180,9 @@ namespace Expense_Management_System.Controllers
         }
 
 
+        [Authorize(Roles = "3,4")]
         [HttpGet("reimbursements")]
+
         public IActionResult GetAllReimbursements
           (
               string? search,
@@ -193,7 +216,9 @@ namespace Expense_Management_System.Controllers
 
 
 
+        [Authorize(Roles = "3")]
         [HttpPost("{id}/reimburse")]
+
         public IActionResult ReimburseExpense(int id, ReimburseExpenseDto reimburseExpenseDto)
         {
             var result = _expenseService.ReimburseExpense(id, reimburseExpenseDto);
@@ -201,7 +226,11 @@ namespace Expense_Management_System.Controllers
             return Ok(result);
         }
 
+
+
+        [Authorize(Roles = "4")]
         [HttpGet("monthly")]
+
         public IActionResult GetMonthlyReport(int month, int year)
         {
             var report = _expenseService.GetMonthlyReport(month, year);
@@ -214,7 +243,11 @@ namespace Expense_Management_System.Controllers
             return Ok(report);
         }
 
+
+
+        [Authorize(Roles = "4")]
         [HttpGet("export")]
+
         public IActionResult ExportMonthlyReport(int month, int year)
         {
             var file = _expenseService.ExportMonthlyReport(month, year);

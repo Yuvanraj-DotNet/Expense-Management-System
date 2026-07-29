@@ -9,7 +9,7 @@ namespace Expense_Management_System.Controllers
     [ApiController]
     [Route("api/[controller]")]
 
-    [Authorize]
+    [Authorize(Roles = "4")]
     public class ExpenseCategoryController : ControllerBase
     {
         private readonly IExpenseCategoryService _expenseCategoryService;
