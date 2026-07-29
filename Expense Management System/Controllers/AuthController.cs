@@ -14,7 +14,7 @@ namespace Expense_Management_System.Controllers
         {
             _authService = authService;
         }
-        
+
         //----------LOGIN-----------//
 
         [HttpPost("login")]
@@ -22,8 +22,12 @@ namespace Expense_Management_System.Controllers
         {
             var result = _authService.Login(loginDto);
 
-            return Ok(result);
+            if (result == null)
+            {
+                return Unauthorized("Invalid Email or Password");
+            }
 
+            return Ok(result);
         }
 
 

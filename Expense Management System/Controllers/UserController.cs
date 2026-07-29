@@ -1,11 +1,16 @@
 ﻿using Expense_Management_System.DTOs.User;
-using Microsoft.AspNetCore.Mvc;
 using Expense_Management_System.Services.User;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Expense_Management_System.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+
+
+    [Authorize(Roles = "4")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;

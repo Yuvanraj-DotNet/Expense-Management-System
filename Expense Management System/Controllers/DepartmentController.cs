@@ -1,11 +1,14 @@
 ﻿using Expense_Management_System.DTOs.Department;
 using Expense_Management_System.Services.Department;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Expense_Management_System.Controllers
 {
-    [Route("api/[controller]")]
+
+    [Authorize]
     [ApiController]
+    [Route("api/[controller]")]
     public class DepartmentController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;
