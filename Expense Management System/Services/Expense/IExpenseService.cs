@@ -5,9 +5,9 @@ namespace Expense_Management_System.Services.Expense
 {
     public interface IExpenseService
     {
-        string CreateExpense(CreateExpenseDto createExpenseDto);
+        string CreateExpense(CreateExpenseDto createExpenseDto, int userId);
 
-        string UpdateExpense(int id, UpdateExpenseDto updateExpenseDto);
+        string UpdateExpense(int id, int userId, UpdateExpenseDto updateExpenseDto);
 
         // Employee only
         List<ExpenseResponseDto> GetMyExpenses(int userId);
@@ -21,17 +21,20 @@ namespace Expense_Management_System.Services.Expense
             out int totalRecords
         );
 
-        string SubmitExpense(int id);
+        string SubmitExpense(int id, int userId);
 
         List<ExpenseResponseDto> GetPendingApprovals(int managerId);
 
-        string ApproveExpense(int id, ApproveExpenseDto approveExpenseDto);
+        string ApproveExpense(int id, int managerId, ApproveExpenseDto approveExpenseDto);
 
-        string RejectExpense(int id, RejectExpenseDto rejectExpenseDto);
+        string RejectExpense(int id, int managerId, RejectExpenseDto rejectExpenseDto);
 
         List<ApprovedExpenseDto> GetApprovedExpenses();
 
-        string ReimburseExpense(int id, ReimburseExpenseDto reimburseExpenseDto);
+        string ReimburseExpense(
+                  int id,
+                  ReimburseExpenseDto reimburseExpenseDto,
+                  int financeUserId);
 
         List<ReimbursementResponseDto> GetAllReimbursements
 

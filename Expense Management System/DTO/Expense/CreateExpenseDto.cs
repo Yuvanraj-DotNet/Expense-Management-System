@@ -4,9 +4,7 @@ namespace Expense_Management_System.DTOs.Expense
 {
     public class CreateExpenseDto
     {
-        [Required]
-        public int UserId { get; set; }
-
+        
         [Required]
         public int CategoryId { get; set; }
 

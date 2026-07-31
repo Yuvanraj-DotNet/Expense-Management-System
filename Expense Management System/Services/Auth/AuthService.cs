@@ -51,7 +51,8 @@ namespace Expense_Management_System.Services.Auth
                   new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                   new Claim(ClaimTypes.Name, user.Name),
                   new Claim(ClaimTypes.Email, user.Email),
-                  new Claim(ClaimTypes.Role, user.RoleId.ToString())
+                  new Claim(ClaimTypes.Role, user.RoleId.ToString()),
+                 new Claim("DepartmentId", user.DepartmentId.ToString())
             };
 
             var key = new SymmetricSecurityKey(
@@ -80,7 +81,8 @@ namespace Expense_Management_System.Services.Auth
                 UserId = user.Id,
                 Name = user.Name,
                 Email = user.Email,
-                RoleId = user.RoleId
+                RoleId = user.RoleId,
+                DepartmentId = user.DepartmentId
             };
         }
     }

@@ -19,11 +19,16 @@ namespace Expense_Management_System.Services.Expense
             _environment = environment;
         }
 
-        public string CreateExpense(CreateExpenseDto createExpenseDto)
+        public string CreateExpense(CreateExpenseDto createExpenseDto, int userId)
         {
             // User Exists
             var user = _context.Users
-                .FirstOrDefault(u => u.Id == createExpenseDto.UserId);
+             .FirstOrDefault(u => u.Id == userId);
+
+            if (user.ManagerId == null)
+            {
+                return "Employee is not assigned to any Manager";
+            }
 
             if (user == null)
             {
@@ -110,7 +115,7 @@ namespace Expense_Management_System.Services.Expense
 
             var expense = new Models.Expense
             {
-                UserId = createExpenseDto.UserId,
+                UserId = userId,
                 CategoryId = createExpenseDto.CategoryId,
                 Title = createExpenseDto.Title.Trim(),
                 Amount = createExpenseDto.Amount,
@@ -125,7 +130,7 @@ namespace Expense_Management_System.Services.Expense
             return "Expense Created Successfully";
         }
 
-        public string UpdateExpense(int id, UpdateExpenseDto updateExpenseDto)
+        public string UpdateExpense(int id, int userId, UpdateExpenseDto updateExpenseDto)
         {
             // Expense Exists
             var expense = _context.Expenses
@@ -134,6 +139,12 @@ namespace Expense_Management_System.Services.Expense
             if (expense == null)
             {
                 return "Expense Not Found";
+            }
+
+            // Only the owner can update the expense
+            if (expense.UserId != userId)
+            {
+                return "You are not allowed to update this expense";
             }
 
             // Only Draft Expenses Can Be Updated
@@ -350,19 +361,28 @@ namespace Expense_Management_System.Services.Expense
 
 
 
-        public string SubmitExpense(int id)
+        public string SubmitExpense(int id, int userId)
         {
-            var expense = _context.Expenses
-                .FirstOrDefault(e => e.Id == id);
+            var expense = _context.Expenses.FirstOrDefault(e => e.Id == id);
 
             if (expense == null)
             {
                 return "Expense Not Found";
             }
 
+            if (expense.UserId != userId)
+            {
+                return "You are not allowed to submit this expense";
+            }
+
             if (expense.Status != "Draft")
             {
                 return "Only Draft Expenses Can Be Submitted";
+            }
+
+            if (string.IsNullOrWhiteSpace(expense.ReceiptPath))
+            {
+                return "Receipt is required before submitting.";
             }
 
             expense.Status = "Submitted";
@@ -406,7 +426,7 @@ namespace Expense_Management_System.Services.Expense
             return expenses;
         }
 
-        public string ApproveExpense(int id, ApproveExpenseDto approveExpenseDto)
+        public string ApproveExpense(int id, int managerId, ApproveExpenseDto approveExpenseDto)
         {
             // Expense Exists
             var expense = _context.Expenses
@@ -440,7 +460,7 @@ namespace Expense_Management_System.Services.Expense
 
             // Manager Exists
             var manager = _context.Users
-                .FirstOrDefault(u => u.Id == approveExpenseDto.ManagerId);
+                  .FirstOrDefault(u => u.Id == managerId);
 
             if (manager == null)
             {
@@ -471,11 +491,12 @@ namespace Expense_Management_System.Services.Expense
             // Approve Expense
             expense.Status = "Approved";
 
+
             // Save Approval History
             var approval = new Models.ExpenseApproval
             {
                 ExpenseId = expense.Id,
-                ApproverId = approveExpenseDto.ManagerId,
+                ApproverId = managerId,
                 Action = "Approved",
                 Comment = string.IsNullOrWhiteSpace(approveExpenseDto.Comment)
                     ? "Approved by Department Manager"
@@ -491,7 +512,10 @@ namespace Expense_Management_System.Services.Expense
         }
 
 
-        public string RejectExpense(int id, RejectExpenseDto rejectExpenseDto)
+        public string RejectExpense(
+                                    int id,
+                                    int managerId,
+                             RejectExpenseDto rejectExpenseDto)
         {
             // Expense Exists
             var expense = _context.Expenses
@@ -531,7 +555,7 @@ namespace Expense_Management_System.Services.Expense
 
             // Manager Exists
             var manager = _context.Users
-                .FirstOrDefault(u => u.Id == rejectExpenseDto.ManagerId);
+            .FirstOrDefault(u => u.Id == managerId);
 
             if (manager == null)
             {
@@ -566,7 +590,7 @@ namespace Expense_Management_System.Services.Expense
             var approval = new Models.ExpenseApproval
             {
                 ExpenseId = expense.Id,
-                ApproverId = rejectExpenseDto.ManagerId,
+                ApproverId = managerId,
                 Action = "Rejected",
                 Comment = rejectExpenseDto.Comment.Trim(),
                 ActionDate = DateTime.Now
@@ -663,7 +687,8 @@ namespace Expense_Management_System.Services.Expense
                 .ToList();
         }
 
-        public string ReimburseExpense(int id, ReimburseExpenseDto reimburseExpenseDto)
+        public string ReimburseExpense( int id, ReimburseExpenseDto reimburseExpenseDto,
+                                        int financeUserId)
         {
             var expense = _context.Expenses
                 .FirstOrDefault(e => e.Id == id);
@@ -701,7 +726,7 @@ namespace Expense_Management_System.Services.Expense
 
             // Finance User Exists
             var financeUser = _context.Users
-                .FirstOrDefault(u => u.Id == reimburseExpenseDto.ProcessedBy);
+              .FirstOrDefault(u => u.Id == financeUserId);
 
             if (financeUser == null)
             {
@@ -729,7 +754,7 @@ namespace Expense_Management_System.Services.Expense
             var reimbursement = new Models.Reimbursement
             {
                 ExpenseId = expense.Id,
-                ProcessedBy = reimburseExpenseDto.ProcessedBy,
+                ProcessedBy = financeUserId,
                 PaymentDate = DateTime.Now,
                 ReferenceNumber = reimburseExpenseDto.ReferenceNumber.Trim(),
                 Amount = expense.Amount

@@ -2,6 +2,7 @@
 using Expense_Management_System.Services.Expense;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Expense_Management_System.Controllers
 {
@@ -29,7 +30,9 @@ namespace Expense_Management_System.Controllers
                 return BadRequest(ModelState);
             }
 
-            var result = _expenseService.CreateExpense(createExpenseDto);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var result = _expenseService.CreateExpense(createExpenseDto, userId);
 
             if (result == "Expense Created Successfully")
             {
@@ -45,15 +48,12 @@ namespace Expense_Management_System.Controllers
         [HttpPut("{id}")]
 
         public IActionResult UpdateExpense(
-            int id,
-           [FromForm] UpdateExpenseDto updateExpenseDto)
+                       int id,
+              [FromForm] UpdateExpenseDto updateExpenseDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            var result = _expenseService.UpdateExpense(id, updateExpenseDto);
+            var result = _expenseService.UpdateExpense(id, userId, updateExpenseDto);
 
             if (result == "Expense Updated Successfully")
             {
@@ -66,11 +66,11 @@ namespace Expense_Management_System.Controllers
 
         [HttpGet("my")]
         [Authorize(Roles = "1")]
-
-        public IActionResult GetMyExpenses(int userId)
+        public IActionResult GetMyExpenses()
         {
-            var expenses = _expenseService.GetMyExpenses(userId);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
+            var expenses = _expenseService.GetMyExpenses(userId);
 
             if (expenses.Count == 0)
             {
@@ -78,9 +78,9 @@ namespace Expense_Management_System.Controllers
             }
 
             return Ok(expenses);
-
-
         }
+
+
 
         [Authorize(Roles = "2,3,4")]
         [HttpGet]
@@ -117,21 +117,23 @@ namespace Expense_Management_System.Controllers
 
         [Authorize(Roles = "1")]
         [HttpPost("{id}/submit")]
-
         public IActionResult SubmitExpense(int id)
         {
-            var result = _expenseService.SubmitExpense(id);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var result = _expenseService.SubmitExpense(id, userId);
 
             return Ok(result);
-
         }
 
 
         [Authorize(Roles = "2")]
-        [HttpGet("pending-approval/{managerId}")]
-
-        public IActionResult GetPendingApprovals(int managerId)
+        [HttpGet("pending-approval")]
+        public IActionResult GetPendingApprovals()
         {
+            var managerId = int.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
             var expenses = _expenseService.GetPendingApprovals(managerId);
 
             if (expenses.Count == 0)
@@ -142,12 +144,15 @@ namespace Expense_Management_System.Controllers
             return Ok(expenses);
         }
 
+
+
         [Authorize(Roles = "2")]
         [HttpPost("{id}/approve")]
-
         public IActionResult ApproveExpense(int id, ApproveExpenseDto approveExpenseDto)
         {
-            var result = _expenseService.ApproveExpense(id, approveExpenseDto);
+            int managerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var result = _expenseService.ApproveExpense(id, managerId, approveExpenseDto);
 
             return Ok(result);
         }
@@ -155,10 +160,17 @@ namespace Expense_Management_System.Controllers
 
         [Authorize(Roles = "2")]
         [HttpPost("{id}/reject")]
-
-        public IActionResult RejectExpense(int id, RejectExpenseDto rejectExpenseDto)
+        public IActionResult RejectExpense(
+                                    int id,
+                          RejectExpenseDto rejectExpenseDto)
         {
-            var result = _expenseService.RejectExpense(id, rejectExpenseDto);
+            var managerId = int.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var result = _expenseService.RejectExpense(
+                id,
+                managerId,
+                rejectExpenseDto);
 
             return Ok(result);
         }
@@ -218,14 +230,18 @@ namespace Expense_Management_System.Controllers
 
         [Authorize(Roles = "3")]
         [HttpPost("{id}/reimburse")]
-
         public IActionResult ReimburseExpense(int id, ReimburseExpenseDto reimburseExpenseDto)
         {
-            var result = _expenseService.ReimburseExpense(id, reimburseExpenseDto);
+            var financeUserId =
+                int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var result = _expenseService.ReimburseExpense(
+                id,
+                reimburseExpenseDto,
+                financeUserId);
 
             return Ok(result);
         }
-
 
 
         [Authorize(Roles = "4")]

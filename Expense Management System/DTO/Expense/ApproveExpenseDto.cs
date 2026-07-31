@@ -2,8 +2,6 @@
 {
     public class ApproveExpenseDto
     {
-        public int ManagerId { get; set; }
-
         public string Comment { get; set; } = "Approved by Manager";
     }
 }
