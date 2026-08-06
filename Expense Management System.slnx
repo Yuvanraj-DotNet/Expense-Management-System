@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="Expense Management System/Expense Management System.csproj" />
+  <Project Path="Expense_Management_System_MVC/Expense_Management_System_MVC.csproj" Id="a14b695d-0300-411a-93f7-a17ba34a9773" />
 </Solution>

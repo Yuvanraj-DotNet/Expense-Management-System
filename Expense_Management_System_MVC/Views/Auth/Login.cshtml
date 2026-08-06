@@ -1,0 +1,43 @@
+﻿@model Expense_Management_System_MVC.DTO.Auth.LoginRequest
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<h2>Login</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div style="color:red;font-weight:bold">
+        @ViewBag.Error
+    </div>
+}
+
+@if (ViewBag.Success != null)
+{
+    <div style="color:green;font-weight:bold">
+        @ViewBag.Success
+    </div>
+}
+
+<form asp-action="Login" asp-controller="Auth" method="post">
+
+    <div>
+        <label>Email</label><br />
+        <input asp-for="Email" />
+    </div>
+
+    <br />
+
+    <div>
+        <label>Password</label><br />
+        <input asp-for="Password" type="password" />
+    </div>
+
+    <br />
+
+    <button type="submit">
+        Login
+    </button>
+
+</form>
