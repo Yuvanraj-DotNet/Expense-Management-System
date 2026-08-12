@@ -11,6 +11,8 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+builder.Services.AddSession();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -22,7 +24,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseRouting();
+
+app.UseSession();
 
 app.UseAuthorization();
 

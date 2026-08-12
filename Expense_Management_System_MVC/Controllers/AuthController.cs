@@ -1,6 +1,7 @@
 ﻿using Expense_Management_System_MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Expense_Management_System_MVC.DTO.Auth;
+using System.Text.Json;
 
 namespace Expense_Management_System_MVC.Controllers
 {
@@ -30,9 +31,14 @@ namespace Expense_Management_System_MVC.Controllers
                 return View(request);
             }
 
-            ViewBag.Success = "Login Successful";
+            HttpContext.Session.SetString("Token", result.Token);
+            HttpContext.Session.SetString("UserId", result.UserId.ToString());
+            HttpContext.Session.SetString("Name", result.Name);
+            HttpContext.Session.SetString("Email", result.Email);
+            HttpContext.Session.SetString("RoleId", result.RoleId.ToString());
+            HttpContext.Session.SetString("DepartmentId", result.DepartmentId.ToString());
 
-            return View();
+            return RedirectToAction("Index", "Dashboard");
         }
     }
 }
